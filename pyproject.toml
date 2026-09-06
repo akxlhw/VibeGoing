@@ -17,6 +17,7 @@ dev = [
     "black>=26.5.1",
     "mypy>=2.3.1",
     "pytest>=8",
+    "pytest-cov>=7.1.0",
     "ruff>=0.16.6",
 ]
 
@@ -69,4 +70,5 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q"
+# 覆盖率门禁（VG-004）：核心包行覆盖率 ≥ 80%
+addopts = "-q --cov=vibegoing --cov-report=term-missing --cov-fail-under=80"
