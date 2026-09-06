@@ -13,6 +13,7 @@ from typing import Any
 
 from crewai.flow import ConversationConfig, ConversationState, Flow
 from crewai.flow.persistence import SQLiteFlowPersistence, persist
+from crewai.llms.base_llm import BaseLLM
 from crewai.memory.unified_memory import Memory
 from crewai.utilities.types import LLMMessage
 
@@ -60,7 +61,12 @@ class TeammateFlow(Flow[ConversationState]):
             {"role": "system", "content": self._system_prompt(memories)},
             *self.conversation_messages,
         ]
-        response = self._llm.call(messages=messages)
+        # BaseLLM 开启流式（stream_turn 才能逐字回传）；替身/自定义 LLM 直接调用
+        if isinstance(self._llm, BaseLLM):
+            with self._conversation_streaming_enabled(self._llm):
+                response = self._llm.call(messages=messages)
+        else:
+            response = self._llm.call(messages=messages)
         content = response if isinstance(response, str) else str(response)
 
         self.append_assistant_message(content)

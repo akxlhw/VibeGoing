@@ -12,6 +12,7 @@ import argparse
 import contextlib
 import json
 import os
+from collections.abc import Callable
 from pathlib import Path
 from uuid import uuid4
 
@@ -287,7 +288,41 @@ def _run_chat(args: argparse.Namespace) -> None:
 
     flow = TeammateFlow(soul=soul, vibe_home=home, session_db=home / "sessions.db")
     try:
-        flow.chat(session_id=session_id)
+        _run_repl(flow, session_id)
     finally:
         flow.finalize_session_traces()
         flow.close()
+
+
+def _run_repl(
+    flow: TeammateFlow,
+    session_id: str,
+    input_fn: Callable[[str], str] = input,
+    output_fn: Callable[[str], None] = print,
+    chunk_writer: Callable[[str], None] | None = None,
+) -> None:
+    """流式 REPL：LLM 输出逐字打印；不支持流式的运行时回退为整段输出。"""
+    write_chunk = chunk_writer or (lambda text: print(text, end="", flush=True))
+    while True:
+        try:
+            message = input_fn("\nYou: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            output_fn("")
+            break
+        if message.lower() in ("exit", "quit"):
+            break
+        if not message:
+            continue
+
+        stream = flow.stream_turn(message, session_id=session_id)
+        streamed = False
+        with stream:
+            output_fn("")
+            for frame in stream.events:
+                if frame.channel == "llm" and frame.type == "llm_stream_chunk" and frame.content:
+                    write_chunk(frame.content)
+                    streamed = True
+        if streamed:
+            output_fn("")
+        else:
+            output_fn(f"Assistant: {stream.result}")
