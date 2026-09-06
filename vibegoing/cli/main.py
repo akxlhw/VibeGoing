@@ -21,6 +21,7 @@ from .crew_cmd import add_crew_arguments, run_crew
 from .memory_cmd import add_memory_arguments, run_memory
 from .runtime_cmd import add_runtime_arguments, run_runtime
 from .soul_cmd import add_soul_arguments, run_soul
+from .ui_cmd import add_ui_arguments, run_ui
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -37,6 +38,7 @@ def build_parser() -> argparse.ArgumentParser:
     add_memory_arguments(sub)
     add_crew_arguments(sub)
     add_runtime_arguments(sub)
+    add_ui_arguments(sub)
     return parser
 
 
@@ -56,5 +58,8 @@ def main(argv: list[str] | None = None) -> None:
         return
     if args.command == "runtime":
         run_runtime(args)
+        return
+    if args.command == "ui":
+        run_ui(args)
         return
     run_chat(args)

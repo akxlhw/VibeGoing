@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VibeGoing · 本地 AI 伙伴工作台</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="side">
+      <div class="brand">
+        <div class="mark">🌿</div>
+        <div><b>VibeGoing</b><small>本地优先 · 换引擎不换大脑</small></div>
+      </div>
+      <a class="nav-item" data-nav="mates" href="#/mates"><span class="ico">🧑‍🤝‍🧑</span>伙伴</a>
+      <a class="nav-item" data-nav="chat" href="#/chat"><span class="ico">💬</span>聊天</a>
+      <a class="nav-item" data-nav="tasks" href="#/tasks"><span class="ico">🗂️</span>任务台账</a>
+      <a class="nav-item" data-nav="runtimes" href="#/runtimes"><span class="ico">⚙️</span>执行体</a>
+      <a class="nav-item" data-nav="settings" href="#/settings"><span class="ico">🔧</span>设置</a>
+      <div class="foot">
+        <span class="ver-chip" id="ver">v?</span><br />
+        数据全部在本机 · 不经第三方服务器
+      </div>
+    </aside>
+    <main class="main" id="view"></main>
+  </div>
+
+  <!-- 五步创建向导（intovibe：01形象 02名字 03人设 04Soul 05Runtime） -->
+  <div class="modal-mask" id="wiz-mask" style="display:none">
+    <div class="modal">
+      <div class="eyebrow">New Teammate</div>
+      <div class="wiz-title" id="wiz-title">创建伙伴</div>
+      <div class="steps">
+        <div class="step" data-s="1">01 形象</div><div class="step" data-s="2">02 名字</div>
+        <div class="step" data-s="3">03 人设</div><div class="step" data-s="4">04 Soul</div>
+        <div class="step" data-s="5">05 Runtime</div>
+      </div>
+      <div id="wiz-body"></div>
+      <div class="wiz-ops">
+        <button class="btn ghost" id="wiz-prev">上一步</button>
+        <button class="btn primary" id="wiz-next">下一步 →</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
