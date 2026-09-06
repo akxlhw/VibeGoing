@@ -36,7 +36,7 @@ def build_parser() -> argparse.ArgumentParser:
     soul = sub.add_parser("soul", help="伙伴身份管理")
     soul_sub = soul.add_subparsers(dest="soul_command", required=True)
 
-    p_list = soul_sub.add_parser("list", help="列出所有伙伴")
+    soul_sub.add_parser("list", help="列出所有伙伴")
 
     p_show = soul_sub.add_parser("show", help="查看伙伴完整 Soul")
     p_show.add_argument("name")
@@ -159,9 +159,8 @@ def _soul_edit(args: argparse.Namespace, store: SoulStore) -> None:
 
 
 def _print_soul(soul: Soul) -> None:
-    print(
-        f"{soul.emoji} {soul.name}（模型：{soul.model}，记忆：{'开' if soul.memory_enabled else '关'}）"
-    )
+    memory_flag = "开" if soul.memory_enabled else "关"
+    print(f"{soul.emoji} {soul.name}（模型：{soul.model}，记忆：{memory_flag}）")
     if soul.persona:
         print(f"  人设：{soul.persona}")
     if soul.principles:
