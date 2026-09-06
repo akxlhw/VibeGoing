@@ -22,6 +22,8 @@ class Soul(BaseModel):
     # LiteLLM provider 字符串。换模型只改这里，人设与记忆不动。
     model: str = "openai/gpt-4o"
     memory_enabled: bool = True
+    # 能力标签（VG-204）：多伙伴协作时按任务文本匹配挑选伙伴
+    capabilities: list[str] = Field(default_factory=list)
 
     def identity_prompt(self) -> str:
         """渲染为注入 system prompt 的身份描述。"""
@@ -86,4 +88,5 @@ def default_soul() -> Soul:
         ],
         model="openai/gpt-4o",
         memory_enabled=True,
+        capabilities=["产品", "工程", "调研"],
     )

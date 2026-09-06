@@ -53,6 +53,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_create.add_argument(
         "--principles", default=None, help='工作原则，逗号分隔，如 "先给结论,不带情绪"'
     )
+    p_create.add_argument(
+        "--capabilities", default=None, help='能力标签，逗号分隔，如 "调研,写作"（协作路由用）'
+    )
 
     p_edit = soul_sub.add_parser("edit", help="编辑伙伴字段（只改传入的项）")
     p_edit.add_argument("name")
@@ -60,6 +63,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_edit.add_argument("--persona")
     p_edit.add_argument("--model")
     p_edit.add_argument("--principles", help="工作原则，逗号分隔（整体替换）")
+    p_edit.add_argument("--capabilities", help="能力标签，逗号分隔（整体替换）")
     p_edit.add_argument(
         "--memory", action=argparse.BooleanOptionalAction, default=None, help="开/关长期记忆"
     )
@@ -153,6 +157,7 @@ def _soul_create(args: argparse.Namespace, store: SoulStore) -> None:
         persona=persona or "",
         principles=principles,
         model=args.model,
+        capabilities=_parse_principles(args.capabilities),
     )
     path = store.save(soul)
     print(f"已创建 {soul.emoji} {soul.name} → {path}")
@@ -170,6 +175,8 @@ def _soul_edit(args: argparse.Namespace, store: SoulStore) -> None:
         updates["model"] = args.model
     if args.principles is not None:
         updates["principles"] = _parse_principles(args.principles)
+    if getattr(args, "capabilities", None) is not None:
+        updates["capabilities"] = _parse_principles(args.capabilities)
     if args.memory is not None:
         updates["memory_enabled"] = args.memory
     if not updates:
@@ -188,6 +195,8 @@ def _print_soul(soul: Soul) -> None:
         print(f"  人设：{soul.persona}")
     if soul.principles:
         print(f"  原则：{'；'.join(soul.principles)}")
+    if soul.capabilities:
+        print(f"  能力：{'、'.join(soul.capabilities)}")
 
 
 def _parse_principles(raw: str | None) -> list[str]:
