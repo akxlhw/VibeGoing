@@ -20,13 +20,14 @@ from crewai.utilities.types import LLMMessage
 from .soul import Soul
 
 
-@persist()
 @ConversationConfig(defer_trace_finalization=True)
 class TeammateFlow(Flow[ConversationState]):
     """一位常驻伙伴：turn 开始前召回记忆，turn 结束后沉淀记忆。
 
     会话快照持久化到 vibe_home/sessions.db（可用 session_db 覆盖路径）：
-    类级 ``@persist()`` 启用快照机制，实例后端在 __init__ 中指向本地库。
+    ``@persist`` 挂在**单个终止步骤**（converse_turn）——官方文档明确警告
+    类级 persist 会产生"中途快照"（路由方法保存时 handler 尚未追加回复，
+    恢复即丢最后一轮助手消息）。实例后端在 __init__ 指向本地库。
     """
 
     def __init__(
@@ -70,8 +71,12 @@ class TeammateFlow(Flow[ConversationState]):
     def _memory_scope(self) -> str:
         return f"teammates/{self.soul.name.lower()}"
 
+    @persist()
     def converse_turn(self) -> str:
-        """覆盖内置闲聊路由：注入 Soul 身份与召回的记忆后再回复。"""
+        """覆盖内置闲聊路由：注入 Soul 身份与召回的记忆后再回复。
+
+        persist 挂本步（终止步骤）：快照点在回复已追加之后，恢复完整。
+        """
         user_message = self.state.current_user_message or ""
         if self.cli_runtime is not None:
             return self._turn_via_cli_runtime(user_message)
