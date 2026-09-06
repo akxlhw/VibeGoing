@@ -232,19 +232,24 @@ def run_hierarchy_pipeline(
             if soul is None:
                 soul = manager if step.agent == manager.name else agents[0]
             memory = memory_for(soul) if memory_for else None
-            packet = HandoffPacket(
-                task=task,
-                from_agent=manager.name,
-                to_agent=soul.name,
-                context=f"这是团队计划的第 {i}/{len(steps)} 阶段：{step.stage}",
-                prior_outputs=list(context.prior_outputs),
-                expectations=step.instruction,
-            )
+            stage_header = f"这是团队计划的第 {i}/{len(steps)} 阶段：{step.stage}"
+            if soul.name == manager.name:
+                # 管理者亲自执行：不构成"他人→自己"的交接，直接下达指令
+                instruction: str = f"{stage_header}\n{step.instruction}"
+            else:
+                instruction = HandoffPacket(
+                    task=task,
+                    from_agent=manager.name,
+                    to_agent=soul.name,
+                    context=stage_header,
+                    prior_outputs=list(context.prior_outputs),
+                    expectations=step.instruction,
+                ).to_prompt()
             announce(f"[{record.task_id}] ▶ 阶段 {i}/{len(steps)} {step.stage} · {soul.name}")
             output = _run_stage(
                 soul,
                 factory(soul.model),
-                packet.to_prompt(),
+                instruction,
                 memory,
                 _soul_memory_scope(soul),
             )
