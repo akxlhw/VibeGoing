@@ -57,11 +57,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_create.add_argument(
         "--capabilities", default=None, help='能力标签，逗号分隔，如 "调研,写作"（协作路由用）'
     )
+    from .runtimes.registry import runtime_names
+
     p_create.add_argument(
         "--runtime",
-        choices=["llm", "claude-code", "codex"],
+        choices=runtime_names(),
         default="llm",
-        help="执行体绑定（默认 llm；CLI 伙伴建议 claude-code/codex）",
+        help="执行体绑定（默认 llm；如 zcode/kimi-code/deepseek-harness/claude-code/codex）",
     )
 
     p_edit = soul_sub.add_parser("edit", help="编辑伙伴字段（只改传入的项）")
@@ -71,9 +73,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_edit.add_argument("--model")
     p_edit.add_argument("--principles", help="工作原则，逗号分隔（整体替换）")
     p_edit.add_argument("--capabilities", help="能力标签，逗号分隔（整体替换）")
-    p_edit.add_argument(
-        "--runtime", choices=["llm", "claude-code", "codex"], help="换绑执行体（换引擎不换大脑）"
-    )
+    p_edit.add_argument("--runtime", choices=runtime_names(), help="换绑执行体（换引擎不换大脑）")
     p_edit.add_argument(
         "--memory", action=argparse.BooleanOptionalAction, default=None, help="开/关长期记忆"
     )
@@ -116,7 +116,7 @@ def build_parser() -> argparse.ArgumentParser:
     runtime_sub = runtime.add_subparsers(dest="runtime_command", required=True)
     runtime_sub.add_parser("list", help="列出全部执行体与健康状态")
     rt_check = runtime_sub.add_parser("check", help="检查单个执行体")
-    rt_check.add_argument("name", choices=["llm", "claude-code", "codex"])
+    rt_check.add_argument("name", choices=runtime_names())
 
     return parser
 
@@ -403,10 +403,10 @@ def _run_crew(
 
 
 def _run_runtime(args: argparse.Namespace) -> None:
-    from .runtimes.registry import get_runtime
+    from .runtimes.registry import get_runtime, runtime_names
     from .soul import Soul
 
-    names = ["llm", "claude-code", "codex"]
+    names = runtime_names()
     if args.runtime_command == "check":
         names = [args.name]
     for name in names:

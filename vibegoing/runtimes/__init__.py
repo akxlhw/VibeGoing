@@ -3,4 +3,4 @@
 导入适配器模块以完成注册（claude-code / codex）。
 """
 
-from . import claude_code, codex, zcode  # noqa: F401  注册 claude-code / codex / zcode
+from . import claude_code, codex, deepseek, kimi_code, zcode  # noqa: F401  注册 CLI runtime
