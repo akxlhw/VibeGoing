@@ -32,7 +32,7 @@ def _guard(tmp_path):
 
 
 def test_kimi_command_contract(tmp_path):
-    """契约（本机 kimi --help 实测）：-p 无头 + --auto 全自主。"""
+    """契约（真机实测修正）：-p 无头；--auto 与 -p 互斥，不可携带。"""
     spawned: dict = {}
 
     def spawn(argv, cwd):
@@ -43,7 +43,7 @@ def test_kimi_command_contract(tmp_path):
     handle = runtime.submit(TaskSpec(instruction="修个 bug", workdir=tmp_path))
 
     assert handle.wait(timeout=5) == "分析中\n修复完成"
-    assert spawned["argv"] == ["kimi", "-p", "修个 bug", "--auto"]
+    assert spawned["argv"] == ["kimi", "-p", "修个 bug"]
     assert spawned["cwd"] == tmp_path.resolve()
 
 
