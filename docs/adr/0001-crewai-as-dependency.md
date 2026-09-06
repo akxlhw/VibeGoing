@@ -20,5 +20,6 @@
 
 ## 后果与约束
 
+- CrewAI 触点以 [docs/dev/CREWAI_TOUCHPOINTS.md](../dev/CREWAI_TOUCHPOINTS.md) 为权威清单，升级框架时逐项核对；新增触点须登记
 - 若未来必须改框架内部：fork 出 `product-patches` 分支，产品以 `tool.uv.sources` 指向，并尽量将补丁 PR 回上游（路线 C 混合方案）
 - CrewAI API 变动的风险由"薄封装"缓解：所有框架调用收拢在 teammate.py 等少数模块（见 PROCESS.md §7）

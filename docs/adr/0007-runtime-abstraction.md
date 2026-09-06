@@ -27,6 +27,12 @@ M3 要把 Claude Code / Codex 等 headless CLI 变成伙伴的"手"。LLM 调用
 
 ## 后果与约束
 
+- **延迟导入约定（2026-09-06 审计后补）**：`teammate.py` 与 `runtimes.{registry,base,executor}`
+  存在函数内延迟互调（teammate 按需取执行体 / LLMRuntime 按需取 LLM 工厂）。
+  这是有意为之：加载期保持无环，运行期双向协作。禁止把这类导入"提升"为顶层——
+  会形成模块加载循环。层级基准：cli → {teammate, collab, runtimes} → {soul, ledger,
+  llm_utils, session} → crewai，只允许向下顶层依赖
+
 - 超时判定在"行间"进行（逐行读取间检查墙钟）：完全不输出的僵死进程
   在收到首行/EOF 前不会被 timeout 杀掉——已知限制，记入发布评审
 - 各家 CLI 协议随版本漂移：适配器解析逻辑集中在 `_parse_line` 单方法，
