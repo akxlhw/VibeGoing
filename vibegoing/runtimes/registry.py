@@ -23,9 +23,17 @@ def get_runtime(soul: Soul, **kwargs) -> Runtime:
     raise ValueError(f"未知 runtime：{name}（可用：{' / '.join(['llm', *_CLI_FACTORIES])}）")
 
 
-# CLI 适配器注册表（claude-code/codex 在各自模块导入时自注册）
+# CLI 适配器注册表（各适配器模块由包 __init__ 导入时自注册）
 _CLI_FACTORIES: dict[str, Callable[..., Runtime]] = {}
 
 
 def register_cli_runtime(name: str, factory: Callable[..., Runtime]) -> None:
     _CLI_FACTORIES[name] = factory
+
+
+def runtime_names() -> list[str]:
+    """全部可用执行体名（llm + 已注册 CLI 适配器），CLI 选项与列表统一取此。
+
+    依赖包 __init__ 已导入全部适配器模块（import 本模块必先经包 __init__）。
+    """
+    return ["llm", *_CLI_FACTORIES]
