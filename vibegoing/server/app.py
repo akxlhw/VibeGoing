@@ -143,7 +143,8 @@ def create_app(
         # 与 CLI 对齐：不存在的伙伴按默认模板开箱创建（如全新环境的 ava）
         soul = store().load_or_create(req.soul, template=default_soul())
         flow = _teammate(soul, approved=req.approved_dangerous)
-        session_id = req.session_id or sessions().resolve(None) or _new_session_id()
+        # null/缺省 = 新会话（与 CLI 语义一致）；恢复走显式 session_id
+        session_id = req.session_id or _new_session_id()
         try:
             try:
                 reply = flow.handle_turn(req.message, session_id=session_id)
