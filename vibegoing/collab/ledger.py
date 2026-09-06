@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import sqlite3
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
 
@@ -41,6 +41,9 @@ class TaskLedger:
     def __init__(self, db_path: Path):
         self.db_path = db_path
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        # Windows 时钟毫秒粒度约 15ms，快速操作可能拿到同一时间戳；
+        # 维护实例级单调时间戳保证"最近活跃排序"稳定
+        self._last_ts = ""
         with self._connect() as conn:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS crew_tasks (
@@ -66,8 +69,18 @@ class TaskLedger:
     def _connect(self) -> sqlite3.Connection:
         return sqlite3.connect(self.db_path)
 
+    def _now(self) -> str:
+        """严格递增的毫秒时间戳：与上次相同或更早时补 1ms。"""
+        ts = datetime.now().isoformat(timespec="milliseconds")
+        if ts <= self._last_ts:
+            ts = (datetime.fromisoformat(self._last_ts) + timedelta(milliseconds=1)).isoformat(
+                timespec="milliseconds"
+            )
+        self._last_ts = ts
+        return ts
+
     def create_task(self, description: str, mode: str) -> TaskRecord:
-        now = datetime.now().isoformat(timespec="milliseconds")
+        now = self._now()
         record = TaskRecord(
             task_id=uuid4().hex[:8],
             description=description,
@@ -87,7 +100,7 @@ class TaskLedger:
         """流转状态并返回刷新后的任务记录。"""
         if status not in TASK_STATUSES:
             raise ValueError(f"非法状态 {status}，允许值：{TASK_STATUSES}")
-        now = datetime.now().isoformat(timespec="milliseconds")
+        now = self._now()
         with self._connect() as conn:
             cur = conn.execute(
                 "UPDATE crew_tasks SET status = ?, updated_at = ? WHERE id = ?",
@@ -100,7 +113,7 @@ class TaskLedger:
         return refreshed[0]
 
     def add_stage(self, task_id: str, stage: str, agent: str, output: str) -> StageRecord:
-        now = datetime.now().isoformat(timespec="milliseconds")
+        now = self._now()
         with self._connect() as conn:
             cur = conn.execute(
                 "INSERT INTO crew_stages (task_id, stage, agent, output, created_at) "
