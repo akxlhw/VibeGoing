@@ -55,6 +55,26 @@ class SessionStore:
                 sessions.append(_to_session_info(flow_uuid, str(ts), state_json[0]))
         return sessions
 
+    def messages(self, session_id: str, limit: int = 200) -> list[dict]:
+        """读取某会话最新快照的消息列表（供 UI 恢复聊天记录）。"""
+        if not self.db_path.exists():
+            return []
+        with sqlite3.connect(self.db_path) as conn:
+            row = conn.execute(
+                "SELECT state_json FROM flow_states WHERE flow_uuid = ? ORDER BY id DESC LIMIT 1",
+                (session_id,),
+            ).fetchone()
+        if row is None:
+            return []
+        try:
+            state = json.loads(row[0])
+            return [
+                {"role": m.get("role"), "content": str(m.get("content", ""))}
+                for m in state.get("messages", [])[:limit]
+            ]
+        except (json.JSONDecodeError, AttributeError):
+            return []
+
     def resolve(self, session_id: str | None) -> str | None:
         """解析 --resume 的目标：None/空 → 最近会话；否则精确或唯一前缀匹配。"""
         sessions = self.list_sessions()
