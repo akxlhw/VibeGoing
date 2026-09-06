@@ -6,6 +6,8 @@ import vibegoing.cli as cli
 
 
 class _FakeFlow:
+    cli_runtime = None
+
     def __init__(self, soul, vibe_home, session_db=None):
         self.soul = soul
 
