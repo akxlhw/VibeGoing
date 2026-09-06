@@ -5,6 +5,16 @@
 
 ## [Unreleased]
 
+### Changed
+- 结构重构（健康度审计 2026-09-06 全部偿还，行为零变化，109 例测试全绿）：
+  - `cli.py`（523 行）拆为 `cli/` 包，每命令组一模块（最大 141 行）
+  - 任务台账上移 `vibegoing/ledger.py`（共享层），执行器不再反向依赖协作层
+  - LLM 工厂抽出 `vibegoing/llm_utils.py`，协作层不再依赖伙伴层
+
+### Added
+- `docs/dev/CREWAI_TOUCHPOINTS.md`：CrewAI 触点清单与框架升级检查表；
+  ADR-0007 补延迟导入约定（teammate↔runtimes 函数内互调为有意设计）
+
 ## [0.4.1] - 2026-09-06
 
 国内 Coding Agent 适配（PO 指令插入版；版本策略例外已在 RELEASE_PLAN 记录）。
