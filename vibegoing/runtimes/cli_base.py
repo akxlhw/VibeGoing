@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import threading
@@ -61,6 +62,12 @@ class CLIRuntimeBase(Runtime):
         self.guard = guard or PermissionGuard()
         self._active: dict[str, ProcessLike] = {}
 
+    @property
+    def effective_binary(self) -> str:
+        """实际使用的二进制：环境变量 VIBE_<NAME>_BIN 可覆盖（桌面内置 CLI 不在 PATH 时用）。"""
+        env_key = "VIBE_" + self.name.upper().replace("-", "_") + "_BIN"
+        return os.environ.get(env_key, self.binary)
+
     # 子类定制点
     def build_command(self, task: TaskSpec) -> list[str]:
         raise NotImplementedError
@@ -71,10 +78,24 @@ class CLIRuntimeBase(Runtime):
         raise NotImplementedError
 
     def health(self) -> RuntimeHealth:
-        found = shutil.which(self.binary)
+        found = shutil.which(self.effective_binary)
         if found is None:
-            return RuntimeHealth(ok=False, detail=f"未在 PATH 找到 `{self.binary}`")
-        return RuntimeHealth(ok=True, detail=f"{self.binary} → {found}")
+            env_key = "VIBE_" + self.name.upper().replace("-", "_") + "_BIN"
+            return RuntimeHealth(
+                ok=False,
+                detail=f"未在 PATH 找到 `{self.effective_binary}`"
+                f"（桌面内置版可设 {env_key} 指向二进制）",
+            )
+        return RuntimeHealth(ok=True, detail=f"{self.effective_binary} → {found}")
+
+
+class TextLineRuntime(CLIRuntimeBase):
+    """纯文本输出适配器：逐行透传为 stdout 事件（zcode/kimi-code/codex/dsh 共用）。"""
+
+    def parse_line(self, line: str) -> list[RuntimeEvent]:
+        if not line.strip():
+            return []
+        return [RuntimeEvent(kind="stdout", content=line)]
 
     def submit(
         self, task: TaskSpec, *, on_event: Callable[[RuntimeEvent], None] | None = None
