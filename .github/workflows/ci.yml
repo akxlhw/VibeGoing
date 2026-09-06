@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  quality:
+    name: 质量门禁（ruff / black / mypy / pytest）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: 安装 Python 3.12
+        run: uv python install 3.12
+
+      - name: 安装依赖
+        run: uv sync --all-groups
+
+      - name: 静态检查（ruff）
+        run: uv run ruff check .
+
+      - name: 格式化检查（black）
+        run: uv run black --check .
+
+      - name: 类型检查（mypy）
+        run: uv run mypy
+
+      - name: 单元测试（pytest）
+        run: uv run pytest
