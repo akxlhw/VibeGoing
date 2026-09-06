@@ -48,7 +48,7 @@ uv run pytest                 # 冒烟测试（无需 API Key）
 
 - [x] M1 单伙伴闭环（v0.2.0）：会话跨进程恢复、Soul/记忆管理命令、流式输出
 - [x] M2 多伙伴协作：交叉复核、层级派活、能力路由、交接（v0.3.0）
-- [ ] M3 CLI Runtime 适配器：把 Claude Code / Codex 等 headless CLI 作为执行体挂到伙伴上
+- [x] M3 CLI Runtime 适配器：Claude Code / Codex 作为执行体 + 权限门控（v0.4.0）
 - [ ] M4 桌面化：Tauri + Python sidecar、Soul 创建向导 GUI
 - [ ] M5 飞书接入与交付：长连接网关、群内 @ 派活、文档/表格写回（最后一个里程碑）
 

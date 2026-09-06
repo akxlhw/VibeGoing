@@ -139,7 +139,7 @@ vibegoing/
 
 **验收标准**：终端执行 `vibegoing crew run "调研 X 并写摘要"`，自动完成 调研（伙伴A）→ 复核（伙伴B）→ 汇总交付，阶段进展实时可见；中间产物与最终结论均落任务台账。
 
-### M3 — CLI Runtime 适配（预估 8–12 人日）★ 核心差异化
+### M3 — CLI Runtime 适配 ✅ 已完成（2026-09-06，v0.4.0；原预估 8–12 人日，设计见 ADR-0007）
 
 **目标**：intovibe 最难复刻也最值钱的能力——把 Claude Code / Codex 等 Coding Agent 变成伙伴的"手"。
 

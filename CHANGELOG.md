@@ -5,6 +5,21 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-06
+
+M3 CLI Runtime（核心差异化）：把 Claude Code / Codex 变成伙伴的"手"。
+
+### Added
+- **Runtime 统一抽象（VG-301）**：LLM 与 CLI 执行体同接口（submit/cancel/health，事件流式回调）；设计决策见 ADR-0007
+- **Claude Code 适配器（VG-302）**：`claude -p <指令> --output-format stream-json`，stream-json 解析、超时终止、取消、非零退出检查
+- **Codex 适配器（VG-303）**：`codex exec <指令>`，复用同一进程基座；`soul edit <名字> --runtime codex` 换绑后 Soul 身份/记忆/会话不变（换引擎不换大脑）
+- **权限门控（VG-305，红线）**：CLI 执行前强制检查——工作目录白名单（`VIBE_ALLOWED_DIRS`，默认仅当前目录）+ 九类危险指令模式审批（`rm -rf`/`sudo`/管道执行远程脚本/强推/删库等），无审批通道直接拒绝，绝不静默执行
+- **重试与台账（VG-304）**：`run_with_retry` 瞬时故障（超时/非零退出）自动重试，每次尝试落任务台账（`crew status` 可查）；权限拒绝不消耗重试
+- **伙伴绑定 Runtime**：`soul create/edit --runtime llm|claude-code|codex`；CLI 伙伴的对话轮次自动经执行体完成，输出逐字流式打印，产出/失败落台账；`vibegoing runtime list|check` 健康检查
+
+### Security
+- CLI 子进程一律参数直传不经 shell；执行前权限门控为硬性前置（拒绝即不启动进程）
+
 ## [0.3.0] - 2026-09-06
 
 M2 多伙伴协作：伙伴们互相配合、互相检查。
