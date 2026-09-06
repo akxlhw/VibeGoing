@@ -99,7 +99,7 @@ class TeammateFlow(Flow[ConversationState]):
     def _turn_via_cli_runtime(self, user_message: str) -> str:
         """CLI 执行体路径（M3）：指令注入身份与记忆，产出落台账。"""
         assert self.cli_runtime is not None  # 类型收窄：入口已判定非空
-        from .collab.ledger import TaskLedger
+        from .ledger import TaskLedger
         from .runtimes.base import TaskSpec
         from .runtimes.executor import run_with_retry
 
@@ -177,9 +177,10 @@ class TeammateFlow(Flow[ConversationState]):
 
 
 def _default_llm(model: str) -> Any:
-    from crewai import LLM
+    # 兼容别名：历史调用点（测试/协作层）沿用此名，实现收拢到 llm_utils
+    from .llm_utils import default_llm
 
-    return LLM(model=model)
+    return default_llm(model)
 
 
 def _build_memory(soul: Soul, vibe_home: Path) -> Memory | None:

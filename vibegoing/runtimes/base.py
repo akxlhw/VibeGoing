@@ -101,9 +101,9 @@ class LLMRuntime(Runtime):
 
     def __init__(self, model: str, llm: Any | None = None):
         if llm is None:
-            from ..teammate import _default_llm
+            from ..llm_utils import default_llm
 
-            llm = _default_llm(model)
+            llm = default_llm(model)
         self.model = model
         self._llm = llm
 

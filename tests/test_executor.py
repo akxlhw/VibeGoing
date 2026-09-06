@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from vibegoing.collab.ledger import TaskLedger
+from vibegoing.ledger import TaskLedger
 from vibegoing.runtimes.base import Runtime, RuntimeHealth, TaskSpec
 from vibegoing.runtimes.executor import run_with_retry
 from vibegoing.runtimes.guard import GuardDecision, PermissionDenied

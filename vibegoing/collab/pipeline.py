@@ -16,10 +16,10 @@ from typing import Any
 
 from crewai.utilities.types import LLMMessage
 
+from ..ledger import TaskLedger, TaskRecord
+from ..llm_utils import default_llm as _default_llm
 from ..soul import Soul
-from ..teammate import _default_llm
 from .handoff import HandoffPacket
-from .ledger import TaskLedger, TaskRecord
 
 # 阶段执行结果回调：接到进展信息就实时展示（CLI 为 print，测试可注入）
 Announce = Callable[[str], None]

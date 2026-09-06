@@ -309,9 +309,9 @@ def _run_memory(args: argparse.Namespace, home: Path) -> None:
 def _run_crew(
     args: argparse.Namespace, home: Path, llm_factory: Callable[[str], Any] | None = None
 ) -> None:
-    from .collab.ledger import TaskLedger
     from .collab.pipeline import run_hierarchy_pipeline, run_review_pipeline
     from .collab.routing import pick_pair
+    from .ledger import TaskLedger
     from .soul import default_reviewer_soul
     from .teammate import _build_memory
 

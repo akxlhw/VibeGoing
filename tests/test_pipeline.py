@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from vibegoing.collab.ledger import TaskLedger
 from vibegoing.collab.pipeline import (
     plan_with_manager,
     run_hierarchy_pipeline,
     run_review_pipeline,
 )
+from vibegoing.ledger import TaskLedger
 from vibegoing.soul import Soul
 
 
