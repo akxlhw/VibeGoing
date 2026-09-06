@@ -5,6 +5,16 @@
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-09-06
+
+国内 Coding Agent 适配（PO 指令插入版；版本策略例外已在 RELEASE_PLAN 记录）。
+
+### Added
+- **ZCode 适配器（VG-307）**：`zcode -p <指令>` 无头模式（智谱 Z.AI）；桌面内置 CLI 可经 `VIBE_ZCODE_BIN` 指向实际二进制
+- **Kimi Code 适配器（VG-308）**：`kimi -p <指令> --auto` 无头全自主模式（月之暗面）；外层权限边界仍由 PermissionGuard 承担
+- **DeepSeek Harness 适配器（VG-309）**：`dsh --profile headless <任务>`（打印最终答案退出，工作目录即工作区根）
+- 通用：`VIBE_<执行体名>_BIN` 环境变量覆盖二进制路径（桌面内置 CLI 不在 PATH 的场景）；`runtime list/check` 与 `soul --runtime` 选项统一从注册表生成（现支持 6 个执行体：llm / claude-code / codex / zcode / kimi-code / deepseek-harness）
+
 ## [0.4.0] - 2026-09-06
 
 M3 CLI Runtime（核心差异化）：把 Claude Code / Codex 变成伙伴的"手"。
