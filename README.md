@@ -46,10 +46,11 @@ uv run pytest                 # 冒烟测试（无需 API Key）
 
 ## 路线图
 
-- [ ] 多轮会话跨进程恢复（`@persist` + SQLite 会话快照）
-- [ ] 飞书机器人网关（长连接收发消息，群内 @ 派活）
-- [ ] CLI Runtime 适配器（把 Claude Code / Codex 等 headless CLI 作为执行体挂到伙伴上）
-- [ ] 多伙伴协作（交叉复核 Crew、层级式派活、A2A 交接）
+- [ ] M1 单伙伴闭环：会话跨进程恢复、Soul/记忆管理命令、流式输出
+- [ ] M2 多伙伴协作：交叉复核 Crew、层级式派活、能力路由、交接
+- [ ] M3 CLI Runtime 适配器：把 Claude Code / Codex 等 headless CLI 作为执行体挂到伙伴上
+- [ ] M4 桌面化：Tauri + Python sidecar、Soul 创建向导 GUI
+- [ ] M5 飞书接入与交付：长连接网关、群内 @ 派活、文档/表格写回（最后一个里程碑）
 
 ## License
 
