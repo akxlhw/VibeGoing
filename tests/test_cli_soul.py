@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import vibegoing.cli as cli
+import vibegoing.cli.soul_cmd as soul_cmd
 from vibegoing.soul import SoulStore
 
 
@@ -47,7 +48,7 @@ def test_soul_create_duplicate_rejected(tmp_path, capsys):
 
 def test_soul_create_with_ai(tmp_path, capsys, monkeypatch):
     monkeypatch.setattr(
-        cli, "_ai_persona", lambda desc, model: ("AI 生成的人设", ["原则一", "原则二"])
+        soul_cmd, "_ai_persona", lambda desc, model: ("AI 生成的人设", ["原则一", "原则二"])
     )
     _run(tmp_path, "soul", "create", "cici", "--ai", "一位严谨的法务顾问")
     out = capsys.readouterr().out
@@ -61,7 +62,7 @@ def test_soul_create_ai_failure_is_actionable(tmp_path, capsys, monkeypatch):
     def boom(desc, model):
         raise RuntimeError("401 unauthorized")
 
-    monkeypatch.setattr(cli, "_ai_persona", boom)
+    monkeypatch.setattr(soul_cmd, "_ai_persona", boom)
     _run(tmp_path, "soul", "create", "dodo", "--ai", "测试")
     out = capsys.readouterr().out
     assert "AI 生成人设失败" in out and "API Key" in out

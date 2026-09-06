@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from vibegoing.cli import _run_repl
+from vibegoing.cli.chat import run_repl as _run_repl
 from vibegoing.soul import Soul
 from vibegoing.teammate import TeammateFlow
 
