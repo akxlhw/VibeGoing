@@ -122,3 +122,12 @@ def _build_memory(soul: Soul, vibe_home: Path) -> Memory | None:
         storage=str(vibe_home / "memory"),
         root_scope="vibegoing",
     )
+
+
+def build_admin_memory(vibe_home: Path) -> Memory:
+    """管理用途的记忆后端：list/show/forget 不触发 LLM 与嵌入调用。"""
+    return Memory(
+        llm="openai/gpt-4o",
+        storage=str(vibe_home / "memory"),
+        root_scope="vibegoing",
+    )
