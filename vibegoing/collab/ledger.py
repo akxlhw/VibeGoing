@@ -83,7 +83,8 @@ class TaskLedger:
             )
         return record
 
-    def set_status(self, task_id: str, status: str) -> None:
+    def set_status(self, task_id: str, status: str) -> TaskRecord:
+        """流转状态并返回刷新后的任务记录。"""
         if status not in TASK_STATUSES:
             raise ValueError(f"非法状态 {status}，允许值：{TASK_STATUSES}")
         now = datetime.now().isoformat(timespec="milliseconds")
@@ -94,6 +95,9 @@ class TaskLedger:
             )
             if cur.rowcount == 0:
                 raise KeyError(f"任务不存在：{task_id}")
+        refreshed = self.get(task_id)
+        assert refreshed is not None  # UPDATE 成功则任务必然存在
+        return refreshed[0]
 
     def add_stage(self, task_id: str, stage: str, agent: str, output: str) -> StageRecord:
         now = datetime.now().isoformat(timespec="milliseconds")
