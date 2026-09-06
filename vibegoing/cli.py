@@ -57,6 +57,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_create.add_argument(
         "--capabilities", default=None, help='能力标签，逗号分隔，如 "调研,写作"（协作路由用）'
     )
+    p_create.add_argument(
+        "--runtime",
+        choices=["llm", "claude-code", "codex"],
+        default="llm",
+        help="执行体绑定（默认 llm；CLI 伙伴建议 claude-code/codex）",
+    )
 
     p_edit = soul_sub.add_parser("edit", help="编辑伙伴字段（只改传入的项）")
     p_edit.add_argument("name")
@@ -65,6 +71,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_edit.add_argument("--model")
     p_edit.add_argument("--principles", help="工作原则，逗号分隔（整体替换）")
     p_edit.add_argument("--capabilities", help="能力标签，逗号分隔（整体替换）")
+    p_edit.add_argument(
+        "--runtime", choices=["llm", "claude-code", "codex"], help="换绑执行体（换引擎不换大脑）"
+    )
     p_edit.add_argument(
         "--memory", action=argparse.BooleanOptionalAction, default=None, help="开/关长期记忆"
     )
@@ -103,6 +112,12 @@ def build_parser() -> argparse.ArgumentParser:
     c_list = crew_sub.add_parser("list", help="列出协作任务")
     c_list.add_argument("--limit", type=int, default=20)
 
+    runtime = sub.add_parser("runtime", help="执行体管理（M3）")
+    runtime_sub = runtime.add_subparsers(dest="runtime_command", required=True)
+    runtime_sub.add_parser("list", help="列出全部执行体与健康状态")
+    rt_check = runtime_sub.add_parser("check", help="检查单个执行体")
+    rt_check.add_argument("name", choices=["llm", "claude-code", "codex"])
+
     return parser
 
 
@@ -139,6 +154,9 @@ def main(argv: list[str] | None = None) -> None:
         return
     if args.command == "crew":
         _run_crew(args, _home_arg(args.home))
+        return
+    if args.command == "runtime":
+        _run_runtime(args)
         return
     _run_chat(args)
 
@@ -183,6 +201,7 @@ def _soul_create(args: argparse.Namespace, store: SoulStore) -> None:
         principles=principles,
         model=args.model,
         capabilities=_parse_principles(args.capabilities),
+        runtime=getattr(args, "runtime", "llm") or "llm",
     )
     path = store.save(soul)
     print(f"已创建 {soul.emoji} {soul.name} → {path}")
@@ -202,6 +221,8 @@ def _soul_edit(args: argparse.Namespace, store: SoulStore) -> None:
         updates["principles"] = _parse_principles(args.principles)
     if getattr(args, "capabilities", None) is not None:
         updates["capabilities"] = _parse_principles(args.capabilities)
+    if getattr(args, "runtime", None) is not None:
+        updates["runtime"] = args.runtime
     if args.memory is not None:
         updates["memory_enabled"] = args.memory
     if not updates:
@@ -215,7 +236,8 @@ def _soul_edit(args: argparse.Namespace, store: SoulStore) -> None:
 
 def _print_soul(soul: Soul) -> None:
     memory_flag = "开" if soul.memory_enabled else "关"
-    print(f"{soul.emoji} {soul.name}（模型：{soul.model}，记忆：{memory_flag}）")
+    runtime = getattr(soul, "runtime", "llm")
+    print(f"{soul.emoji} {soul.name}（模型：{soul.model}，执行体：{runtime}，记忆：{memory_flag}）")
     if soul.persona:
         print(f"  人设：{soul.persona}")
     if soul.principles:
@@ -377,6 +399,25 @@ def _run_crew(
             print(stages[-1].output)
 
 
+# ---- runtime 子命令（M3）----
+
+
+def _run_runtime(args: argparse.Namespace) -> None:
+    from .runtimes.registry import get_runtime
+    from .soul import Soul
+
+    names = ["llm", "claude-code", "codex"]
+    if args.runtime_command == "check":
+        names = [args.name]
+    for name in names:
+        runtime = get_runtime(Soul(name="probe", runtime=name))
+        health = runtime.health()
+        flag = "✅" if health.ok else "❌"
+        print(f"{flag} {name:<12} {health.detail}")
+        if health.ok and health.version:
+            print(f"   版本：{health.version}")
+
+
 # ---- 对话（默认命令） ----
 
 
@@ -425,11 +466,22 @@ def _run_chat(args: argparse.Namespace) -> None:
         session_id = str(uuid4())
 
     memory_flag = "开" if soul.memory_enabled else "关"
-    print(f"{soul.emoji} {soul.name} 已就绪（模型：{soul.model}，记忆：{memory_flag}）")
+    runtime_name = getattr(soul, "runtime", "llm") or "llm"
+    print(
+        f"{soul.emoji} {soul.name} 已就绪"
+        f"（模型：{soul.model}，执行体：{runtime_name}，记忆：{memory_flag}）"
+    )
     print(f"会话 ID：{session_id}（之后可用 --resume {session_id} 继续）")
     print("输入 exit / quit 结束对话。\n")
 
     flow = TeammateFlow(soul=soul, vibe_home=home, session_db=home / "sessions.db")
+    if flow.cli_runtime is not None:
+
+        def _print_event(event) -> None:
+            if event.kind == "stdout" and event.content:
+                print(event.content, end="", flush=True)
+
+        flow.on_runtime_event = _print_event
     try:
         _run_repl(flow, session_id)
     finally:

@@ -37,9 +37,11 @@ class TeammateFlow(Flow[ConversationState]):
         memory: Memory | None = None,
         session_db: Path | None = None,
         recall_min_score: float | None = None,
+        cli_runtime: Any | None = None,
     ):
         super().__init__()
         self.soul = soul
+        self.vibe_home = vibe_home
         self._llm = llm if llm is not None else _default_llm(soul.model)
         # 命名为 memory_backend 而非 memory：RuntimeFlow 基类已声明 memory 字段
         # （Memory | MemoryScope | MemorySlice），避免与框架字段冲突
@@ -54,6 +56,15 @@ class TeammateFlow(Flow[ConversationState]):
             if recall_min_score is not None
             else float(os.environ.get("VIBE_RECALL_MIN_SCORE", "0.35"))
         )
+        # M3：CLI Runtime 绑定——换引擎不换大脑（ADR-0007）
+        self.on_runtime_event: Any | None = None  # stdout 事件回调（REPL 流式打印）
+        self.cli_workdir = Path(os.environ.get("VIBE_WORKDIR", os.getcwd())).resolve()
+        self.cli_timeout = float(os.environ.get("VIBE_CLI_TIMEOUT", "600"))
+        self.cli_runtime = cli_runtime
+        if self.cli_runtime is None and getattr(soul, "runtime", "llm") not in ("llm", "", None):
+            from .runtimes.registry import get_runtime
+
+            self.cli_runtime = get_runtime(soul)
 
     @property
     def _memory_scope(self) -> str:
@@ -62,6 +73,11 @@ class TeammateFlow(Flow[ConversationState]):
     def converse_turn(self) -> str:
         """覆盖内置闲聊路由：注入 Soul 身份与召回的记忆后再回复。"""
         user_message = self.state.current_user_message or ""
+        if self.cli_runtime is not None:
+            return self._turn_via_cli_runtime(user_message)
+        return self._turn_via_llm(user_message)
+
+    def _turn_via_llm(self, user_message: str) -> str:
         memories = self._recall(user_message)
 
         messages: list[LLMMessage] = [
@@ -79,6 +95,34 @@ class TeammateFlow(Flow[ConversationState]):
         self.append_assistant_message(content)
         self._remember_turn(user_message, content)
         return content
+
+    def _turn_via_cli_runtime(self, user_message: str) -> str:
+        """CLI 执行体路径（M3）：指令注入身份与记忆，产出落台账。"""
+        assert self.cli_runtime is not None  # 类型收窄：入口已判定非空
+        from .collab.ledger import TaskLedger
+        from .runtimes.base import TaskSpec
+        from .runtimes.executor import run_with_retry
+
+        memories = self._recall(user_message)
+        instruction = self._system_prompt(memories) + f"\n\n# 用户指令\n{user_message}"
+        spec = TaskSpec(
+            instruction=instruction, workdir=self.cli_workdir, timeout_s=self.cli_timeout
+        )
+        ledger = TaskLedger(self.vibe_home / "ledger.db")
+        try:
+            content, _record = run_with_retry(
+                spec, self.cli_runtime, ledger, attempts=1, on_event=self._forward_runtime_event
+            )
+        except Exception as exc:  # 门控拒绝/执行失败都不打断会话，明示原因
+            content = f"⚠️ CLI 执行失败：{exc}"
+
+        self.append_assistant_message(content)
+        self._remember_turn(user_message, content)
+        return content
+
+    def _forward_runtime_event(self, event: Any) -> None:
+        if self.on_runtime_event is not None:
+            self.on_runtime_event(event)
 
     def _system_prompt(self, memories: list[str]) -> str:
         sections = [self.soul.identity_prompt()]
