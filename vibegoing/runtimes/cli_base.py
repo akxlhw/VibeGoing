@@ -88,15 +88,6 @@ class CLIRuntimeBase(Runtime):
             )
         return RuntimeHealth(ok=True, detail=f"{self.effective_binary} → {found}")
 
-
-class TextLineRuntime(CLIRuntimeBase):
-    """纯文本输出适配器：逐行透传为 stdout 事件（zcode/kimi-code/codex/dsh 共用）。"""
-
-    def parse_line(self, line: str) -> list[RuntimeEvent]:
-        if not line.strip():
-            return []
-        return [RuntimeEvent(kind="stdout", content=line)]
-
     def submit(
         self, task: TaskSpec, *, on_event: Callable[[RuntimeEvent], None] | None = None
     ) -> TaskHandle:
@@ -153,3 +144,12 @@ class TextLineRuntime(CLIRuntimeBase):
         if proc is not None:
             proc.terminate()
         handle._complete(output=None, error="已取消（进程已终止）")
+
+
+class TextLineRuntime(CLIRuntimeBase):
+    """纯文本输出适配器：逐行透传为 stdout 事件（zcode/kimi-code/codex/dsh 共用）。"""
+
+    def parse_line(self, line: str) -> list[RuntimeEvent]:
+        if not line.strip():
+            return []
+        return [RuntimeEvent(kind="stdout", content=line)]
