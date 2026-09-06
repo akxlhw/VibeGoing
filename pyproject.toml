@@ -53,7 +53,9 @@ line-length = 100
 target-version = ["py310"]
 
 [tool.mypy]
-python_version = "3.10"
+# 检查目标 3.12：三方库（numpy 等）的 PEP 695 桩在 3.10 目标下报语法错；
+# 3.10/3.11 的语法兼容由 ruff 的 target-version py310 把关
+python_version = "3.12"
 # 只检查产品代码；测试用替身对象，类型从宽
 files = ["vibegoing"]
 warn_unused_ignores = true
