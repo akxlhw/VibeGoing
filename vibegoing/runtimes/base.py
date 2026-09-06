@@ -56,6 +56,8 @@ class TaskHandle:
         self._error: str | None = None
 
     def _complete(self, output: str | None, error: str | None) -> None:
+        if self._finished.is_set():
+            return  # cancel 与执行线程竞争时先到者生效
         self._output, self._error = output, error
         self._finished.set()
 

@@ -24,6 +24,8 @@ class Soul(BaseModel):
     memory_enabled: bool = True
     # 能力标签（VG-204）：多伙伴协作时按任务文本匹配挑选伙伴
     capabilities: list[str] = Field(default_factory=list)
+    # 执行体绑定（M3）：llm / claude-code / codex；换引擎只改这里（VG-301/303）
+    runtime: str = "llm"
 
     def identity_prompt(self) -> str:
         """渲染为注入 system prompt 的身份描述。"""
