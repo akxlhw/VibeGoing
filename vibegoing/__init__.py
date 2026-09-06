@@ -4,4 +4,4 @@ from .soul import Soul, SoulStore, default_soul
 
 __all__ = ["Soul", "SoulStore", "__version__", "default_soul"]
 
-__version__ = "0.4.0"
+__version__ = "0.4.1"
