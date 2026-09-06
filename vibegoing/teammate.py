@@ -6,12 +6,14 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
 from pathlib import Path
 from typing import Any
 
 from crewai.flow import ConversationConfig, ConversationState, Flow
-from crewai.memory import Memory
+from crewai.memory.unified_memory import Memory
+from crewai.utilities.types import LLMMessage
 
 from .soul import Soul
 
@@ -30,7 +32,9 @@ class TeammateFlow(Flow[ConversationState]):
         super().__init__()
         self.soul = soul
         self._llm = llm if llm is not None else _default_llm(soul.model)
-        self.memory = memory if memory is not None else _build_memory(soul, vibe_home)
+        # 命名为 memory_backend 而非 memory：RuntimeFlow 基类已声明 memory 字段
+        # （Memory | MemoryScope | MemorySlice），避免与框架字段冲突
+        self.memory_backend = memory if memory is not None else _build_memory(soul, vibe_home)
 
     @property
     def _memory_scope(self) -> str:
@@ -41,7 +45,7 @@ class TeammateFlow(Flow[ConversationState]):
         user_message = self.state.current_user_message or ""
         memories = self._recall(user_message)
 
-        messages: list[dict[str, str]] = [
+        messages: list[LLMMessage] = [
             {"role": "system", "content": self._system_prompt(memories)},
             *self.conversation_messages,
         ]
@@ -61,10 +65,10 @@ class TeammateFlow(Flow[ConversationState]):
         return "\n\n".join(s for s in sections if s)
 
     def _recall(self, query: str) -> list[str]:
-        if self.memory is None or not query:
+        if self.memory_backend is None or not query:
             return []
         try:
-            matches = self.memory.recall(
+            matches = self.memory_backend.recall(
                 query=query,
                 scope=self._memory_scope,
                 limit=5,
@@ -76,22 +80,21 @@ class TeammateFlow(Flow[ConversationState]):
             return []
 
     def _remember_turn(self, user_message: str, reply: str) -> None:
-        if self.memory is None or not user_message:
+        if self.memory_backend is None or not user_message:
             return
-        try:
-            self.memory.remember(
-                content=f"用户说：{user_message}\nAva 回复：{reply}",
+        # 记忆是增强项：写入失败（如网络/配额问题）不应打断对话
+        with contextlib.suppress(Exception):
+            self.memory_backend.remember(
+                content=f"用户说：{user_message}\n{self.soul.name} 回复：{reply}",
                 scope=self._memory_scope,
                 categories=["conversation"],
                 importance=0.4,
                 source="chat",
             )
-        except Exception:
-            pass
 
     def close(self) -> None:
-        if self.memory is not None:
-            self.memory.close()
+        if self.memory_backend is not None:
+            self.memory_backend.close()
 
 
 def _default_llm(model: str) -> Any:

@@ -35,7 +35,8 @@ def main() -> None:
     if env_model := os.environ.get("VIBE_LLM"):
         soul = soul.model_copy(update={"model": env_model})
 
-    print(f"{soul.emoji} {soul.name} 已就绪（模型：{soul.model}，记忆：{'开' if soul.memory_enabled else '关'}）")
+    memory_flag = "开" if soul.memory_enabled else "关"
+    print(f"{soul.emoji} {soul.name} 已就绪（模型：{soul.model}，记忆：{memory_flag}）")
     print("输入 exit / quit 结束对话。\n")
 
     flow = TeammateFlow(soul=soul, vibe_home=home)
