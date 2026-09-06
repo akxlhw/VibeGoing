@@ -13,8 +13,58 @@ dependencies = [
 vibegoing = "vibegoing.__main__:main"
 
 [dependency-groups]
-dev = ["pytest>=8"]
+dev = [
+    "black>=26.5.1",
+    "mypy>=2.3.1",
+    "pytest>=8",
+    "ruff>=0.16.6",
+]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+# ---- 质量门禁配置（CI 与本地共用，见 docs/agile/PROCESS.md）----
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # bugbear：常见 bug 模式
+    "C4",  # comprehensions
+    "SIM", # simplify
+    "RUF", # ruff 自身规则
+]
+ignore = [
+    "RUF001", # 中文全角标点误报（本项目用户可见字符串为中文）
+    "RUF002",
+    "RUF003",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.mypy]
+python_version = "3.10"
+# 只检查产品代码；测试用替身对象，类型从宽
+files = ["vibegoing"]
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = ["lancedb.*", "chromadb.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

@@ -52,6 +52,10 @@ uv run pytest                 # 冒烟测试（无需 API Key）
 - [ ] M4 桌面化：Tauri + Python sidecar、Soul 创建向导 GUI
 - [ ] M5 飞书接入与交付：长连接网关、群内 @ 派活、文档/表格写回（最后一个里程碑）
 
+## 开发流程与文档
+
+本项目以敏捷方式运作（详见 [开发流程与工程规范](docs/agile/PROCESS.md)）：故事化管理（[BACKLOG](docs/agile/BACKLOG.md)）、周冲刺（[冲刺档案](docs/agile/sprints/)）、四道质量门禁（ruff / black / mypy / pytest，CI 强制）、架构决策记录（[ADR](docs/adr/)）、[变更日志](CHANGELOG.md)。所有变更经特性分支进入 `main`。
+
 ## License
 
 MIT（依赖的 CrewAI 同为 MIT）
