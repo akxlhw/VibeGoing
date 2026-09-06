@@ -75,6 +75,7 @@
 | [BACKLOG.md](BACKLOG.md) | 产品待办：史诗与故事明细 |
 | [sprints/](sprints/) | 冲刺档案：计划、进度、评审与回顾 |
 | [RELEASE_PLAN.md](RELEASE_PLAN.md) | 版本发布计划：策略、序列、发布流程 |
+| [releases/](releases/) | 发布评审与验收记录 |
 | [../adr/](../adr/) | 架构决策记录（ADR） |
 | [../../CHANGELOG.md](../../CHANGELOG.md) | 面向用户的变更日志 |
 | [../../README.md](../../README.md) | 快速开始与项目概览 |
