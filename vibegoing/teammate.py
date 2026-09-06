@@ -36,6 +36,7 @@ class TeammateFlow(Flow[ConversationState]):
         llm: Any | None = None,
         memory: Memory | None = None,
         session_db: Path | None = None,
+        recall_min_score: float | None = None,
     ):
         super().__init__()
         self.soul = soul
@@ -47,6 +48,12 @@ class TeammateFlow(Flow[ConversationState]):
         self.persistence = SQLiteFlowPersistence(str(session_db or vibe_home / "sessions.db"))
         if hasattr(self, "_instance_persistence"):
             self._instance_persistence = True
+        # VG-106：召回质量调优——相关度低于阈值的结果不注入 prompt
+        self.recall_min_score = (
+            recall_min_score
+            if recall_min_score is not None
+            else float(os.environ.get("VIBE_RECALL_MIN_SCORE", "0.35"))
+        )
 
     @property
     def _memory_scope(self) -> str:
@@ -91,10 +98,21 @@ class TeammateFlow(Flow[ConversationState]):
                 limit=5,
                 depth="shallow",
             )
-            return [m.record.content for m in matches if m.record.content]
         except Exception:
             # 记忆是增强项，不能因为它阻塞对话
             return []
+        # VG-106 调优：阈值过滤 + 同记录去重 + 注入上限，抑制无关记忆混入 prompt
+        seen: set[str] = set()
+        contents: list[str] = []
+        for m in matches:
+            if m.score < self.recall_min_score or m.record.id in seen:
+                continue
+            seen.add(m.record.id)
+            if m.record.content:
+                contents.append(m.record.content)
+            if len(contents) >= 3:
+                break
+        return contents
 
     def _remember_turn(self, user_message: str, reply: str) -> None:
         if self.memory_backend is None or not user_message:
