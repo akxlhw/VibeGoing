@@ -9,6 +9,7 @@ from __future__ import annotations
 from crewai.memory.types import MemoryRecord
 
 import vibegoing.cli as cli
+import vibegoing.cli.memory_cmd as memory_cmd
 
 
 class FakeMemory:
@@ -32,7 +33,7 @@ def _record(rid: str, content: str, scope: str = "/") -> MemoryRecord:
 
 
 def _install(monkeypatch, fake):
-    monkeypatch.setattr(cli, "build_admin_memory", lambda home: fake)
+    monkeypatch.setattr(memory_cmd, "build_admin_memory", lambda home: fake)
 
 
 def test_memory_list_and_soul_filter(tmp_path, capsys, monkeypatch):

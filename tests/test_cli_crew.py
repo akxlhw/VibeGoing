@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-import vibegoing.cli as cli
+import vibegoing.cli.crew_cmd as cli
 from vibegoing.ledger import TaskLedger
 
 
@@ -45,7 +45,7 @@ def _factory() -> Callable[[str], object]:
 
 def test_crew_run_review_out_of_box(tmp_path, capsys):
     """一条命令开箱跑通：自动补齐伙伴，产出→复核→汇总落台账。"""
-    cli._run_crew(
+    cli.run_crew(
         _args("run", task="调研多智能体框架并写摘要", mode="review"),
         tmp_path,
         llm_factory=_factory(),
@@ -67,7 +67,7 @@ def test_crew_run_hierarchy(tmp_path, capsys):
 
     SoulStore(tmp_path / "souls").load_or_create("bob", template=default_reviewer_soul())
 
-    cli._run_crew(
+    cli.run_crew(
         _args("run", task="做一份行业速览", mode="hierarchy"),
         tmp_path,
         llm_factory=lambda model: PlanThenRun(),
@@ -81,24 +81,24 @@ def test_crew_run_hierarchy(tmp_path, capsys):
 
 
 def test_crew_status_and_list(tmp_path, capsys):
-    cli._run_crew(
+    cli.run_crew(
         _args("run", task="任务A", mode="review"),
         tmp_path,
         llm_factory=_factory(),
     )
     capsys.readouterr()
 
-    cli._run_crew(_args("list"), tmp_path)
+    cli.run_crew(_args("list"), tmp_path)
     out = capsys.readouterr().out
     assert "review" in out and "done" in out and "任务A" in out
 
-    cli._run_crew(_args("status"), tmp_path)  # 默认最近一件
+    cli.run_crew(_args("status"), tmp_path)  # 默认最近一件
     out = capsys.readouterr().out
     assert "状态：done" in out and "produce" in out and "finalize" in out
 
 
 def test_crew_status_not_found(tmp_path, capsys):
-    cli._run_crew(_args("status", task_id="zzz"), tmp_path)
+    cli.run_crew(_args("status", task_id="zzz"), tmp_path)
     assert "找不到任务" in capsys.readouterr().out
 
 

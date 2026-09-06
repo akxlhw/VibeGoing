@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import vibegoing.cli as cli
+import vibegoing.cli.chat as chat
+import vibegoing.cli.soul_cmd as soul_cmd
 
 
 class _FakeFlow:
@@ -20,8 +22,8 @@ class _FakeFlow:
 
 def test_run_chat_banner_and_session_id(tmp_path, capsys, monkeypatch):
     recorded = {}
-    monkeypatch.setattr(cli, "TeammateFlow", _FakeFlow)
-    monkeypatch.setattr(cli, "_run_repl", lambda flow, sid: recorded.update(sid=sid))
+    monkeypatch.setattr(chat, "TeammateFlow", _FakeFlow)
+    monkeypatch.setattr(chat, "run_repl", lambda flow, sid: recorded.update(sid=sid))
 
     cli.main(["--home", str(tmp_path)])
 
@@ -38,26 +40,26 @@ def test_run_chat_resume_not_found_lists_sessions(tmp_path, capsys, monkeypatch)
 
 
 def test_ai_persona_parses_json(monkeypatch):
-    import vibegoing.teammate as teammate
+    import vibegoing.llm_utils as llm_utils
 
     class StubLLM:
         def call(self, messages, **kwargs):
             return '{"persona": "严谨的法务顾问", "principles": ["引用条款"]}'
 
-    monkeypatch.setattr(teammate, "_default_llm", lambda model: StubLLM())
-    persona, principles = cli._ai_persona("法务", "any/model")
+    monkeypatch.setattr(llm_utils, "default_llm", lambda model: StubLLM())
+    persona, principles = soul_cmd._ai_persona("法务", "any/model")
     assert persona == "严谨的法务顾问"
     assert principles == ["引用条款"]
 
 
 def test_ai_persona_fallback_to_raw_text(monkeypatch):
-    import vibegoing.teammate as teammate
+    import vibegoing.llm_utils as llm_utils
 
     class StubLLM:
         def call(self, messages, **kwargs):
             return "模型没按 JSON 输出的人设文本"
 
-    monkeypatch.setattr(teammate, "_default_llm", lambda model: StubLLM())
-    persona, principles = cli._ai_persona("法务", "any/model")
+    monkeypatch.setattr(llm_utils, "default_llm", lambda model: StubLLM())
+    persona, principles = soul_cmd._ai_persona("法务", "any/model")
     assert persona == "模型没按 JSON 输出的人设文本"
     assert principles == []

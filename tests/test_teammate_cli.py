@@ -6,6 +6,7 @@ import threading
 import uuid
 
 import vibegoing.cli as cli
+import vibegoing.cli.chat as chat
 from vibegoing.ledger import TaskLedger
 from vibegoing.runtimes.base import (
     Runtime,
@@ -143,8 +144,8 @@ def test_chat_banner_shows_runtime(tmp_path, capsys, monkeypatch):
         def close(self):
             pass
 
-    monkeypatch.setattr(cli, "TeammateFlow", FakeFlow)
-    monkeypatch.setattr(cli, "_run_repl", lambda flow, sid: recorded.update(sid=sid))
+    monkeypatch.setattr(chat, "TeammateFlow", FakeFlow)
+    monkeypatch.setattr(chat, "run_repl", lambda flow, sid: recorded.update(sid=sid))
     cli.main(["--home", str(tmp_path), "--soul", "dev"])
 
     out = capsys.readouterr().out
