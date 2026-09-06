@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 import vibegoing.cli as cli
-from vibegoing.collab.ledger import TaskLedger
+from vibegoing.ledger import TaskLedger
 
 
 class SequenceLLM:

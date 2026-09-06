@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from vibegoing.collab.ledger import TaskLedger
+from vibegoing.ledger import TaskLedger
 
 
 def test_task_lifecycle_with_stages(tmp_path):

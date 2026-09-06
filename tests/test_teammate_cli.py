@@ -6,7 +6,7 @@ import threading
 import uuid
 
 import vibegoing.cli as cli
-from vibegoing.collab.ledger import TaskLedger
+from vibegoing.ledger import TaskLedger
 from vibegoing.runtimes.base import (
     Runtime,
     RuntimeEvent,

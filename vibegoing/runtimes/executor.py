@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from ..collab.ledger import TaskLedger, TaskRecord
+from ..ledger import TaskLedger, TaskRecord
 from .base import Runtime, RuntimeEvent, TaskHandle, TaskSpec
 from .guard import PermissionDenied
 
