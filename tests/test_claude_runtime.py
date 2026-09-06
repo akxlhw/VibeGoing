@@ -115,7 +115,7 @@ def test_cancel_terminates(tmp_path):
     assert slow.terminated
 
 
-def test_nonzero_exit_is_error(tmp_path):
+def test_nonzero_exit_is_error_with_output_tail(tmp_path):
     runtime = ClaudeCodeRuntime(
         spawn=lambda a, c: FakeProcess(_claude_stream(), returncode=2),
         guard=_guard(tmp_path),
@@ -123,6 +123,15 @@ def test_nonzero_exit_is_error(tmp_path):
     handle = runtime.submit(TaskSpec(instruction="任务", workdir=tmp_path))
     with pytest.raises(RuntimeError, match="退出码 2"):
         handle.wait(timeout=10)
+
+    # 退出码错误需携带输出尾部（可诊断性：stderr 合并进 stdout）
+    runtime2 = ClaudeCodeRuntime(
+        spawn=lambda a, c: FakeProcess(["error: Cannot combine flags"], returncode=1),
+        guard=_guard(tmp_path),
+    )
+    handle2 = runtime2.submit(TaskSpec(instruction="任务", workdir=tmp_path))
+    with pytest.raises(RuntimeError, match="Cannot combine flags"):
+        handle2.wait(timeout=10)
 
 
 def test_parse_line_variants():

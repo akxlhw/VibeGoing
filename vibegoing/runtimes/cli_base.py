@@ -126,7 +126,10 @@ class CLIRuntimeBase(Runtime):
                             chunks.append(event.content)
                 code = proc.wait(timeout=10)
                 if code != 0:
-                    raise RuntimeError(f"{self.binary} 退出码 {code}")
+                    tail = "\n".join(chunks[-3:])[-300:]
+                    raise RuntimeError(
+                        f"{self.binary} 退出码 {code}" + (f"，输出尾部：{tail}" if tail else "")
+                    )
                 output = final if final is not None else "\n".join(chunks)
                 emit(RuntimeEvent(kind="done", content=output))
                 handle._complete(output=output, error=None)
