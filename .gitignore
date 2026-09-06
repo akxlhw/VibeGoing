@@ -1,0 +1,14 @@
+# Local data: souls, memory store, session snapshots
+.vibe/
+
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+dist/
+build/
+*.egg-info/
