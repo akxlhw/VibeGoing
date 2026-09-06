@@ -82,6 +82,12 @@ def build_parser() -> argparse.ArgumentParser:
 
 def _add_chat_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--soul", default="ava", help="伙伴名字（默认 ava，不存在则按模板创建）")
+    parser.add_argument(
+        "--model",
+        default=None,
+        metavar="PROVIDER/MODEL",
+        help="本次会话临时换模型（优先级高于 VIBE_LLM 与 Soul 绑定；Soul 与记忆不变）",
+    )
     parser.add_argument("--list", action="store_true", help="列出所有伙伴后退出")
     parser.add_argument("--list-sessions", action="store_true", help="列出历史会话后退出")
     parser.add_argument(
@@ -244,6 +250,15 @@ def _run_memory(args: argparse.Namespace, home: Path) -> None:
 # ---- 对话（默认命令） ----
 
 
+def _prepare_soul(args: argparse.Namespace, store: SoulStore) -> Soul:
+    """加载 Soul 并应用模型覆盖：--model > VIBE_LLM > Soul 绑定（VG-105）。"""
+    soul = store.load_or_create(args.soul, template=default_soul())
+    override = getattr(args, "model", None) or os.environ.get("VIBE_LLM")
+    if override:
+        soul = soul.model_copy(update={"model": override})
+    return soul
+
+
 def _run_chat(args: argparse.Namespace) -> None:
     home = _home_arg(args.home)
     store = SoulStore(home / "souls")
@@ -264,9 +279,7 @@ def _run_chat(args: argparse.Namespace) -> None:
             print(f"{s.session_id:<38} {s.message_count:>4}  {s.updated_at[:19]}  {s.preview}")
         return
 
-    soul = store.load_or_create(args.soul, template=default_soul())
-    if env_model := os.environ.get("VIBE_LLM"):
-        soul = soul.model_copy(update={"model": env_model})
+    soul = _prepare_soul(args, store)
 
     session_id: str | None = None
     if args.resume is not None:
