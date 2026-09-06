@@ -12,15 +12,21 @@ from pathlib import Path
 from typing import Any
 
 from crewai.flow import ConversationConfig, ConversationState, Flow
+from crewai.flow.persistence import SQLiteFlowPersistence, persist
 from crewai.memory.unified_memory import Memory
 from crewai.utilities.types import LLMMessage
 
 from .soul import Soul
 
 
+@persist()
 @ConversationConfig(defer_trace_finalization=True)
 class TeammateFlow(Flow[ConversationState]):
-    """一位常驻伙伴：turn 开始前召回记忆，turn 结束后沉淀记忆。"""
+    """一位常驻伙伴：turn 开始前召回记忆，turn 结束后沉淀记忆。
+
+    会话快照持久化到 vibe_home/sessions.db（可用 session_db 覆盖路径）：
+    类级 ``@persist()`` 启用快照机制，实例后端在 __init__ 中指向本地库。
+    """
 
     def __init__(
         self,
@@ -28,6 +34,7 @@ class TeammateFlow(Flow[ConversationState]):
         vibe_home: Path,
         llm: Any | None = None,
         memory: Memory | None = None,
+        session_db: Path | None = None,
     ):
         super().__init__()
         self.soul = soul
@@ -35,6 +42,10 @@ class TeammateFlow(Flow[ConversationState]):
         # 命名为 memory_backend 而非 memory：RuntimeFlow 基类已声明 memory 字段
         # （Memory | MemoryScope | MemorySlice），避免与框架字段冲突
         self.memory_backend = memory if memory is not None else _build_memory(soul, vibe_home)
+        # 会话持久化：实例后端覆盖类级默认；标志需同步置位，否则只读不写
+        self.persistence = SQLiteFlowPersistence(str(session_db or vibe_home / "sessions.db"))
+        if hasattr(self, "_instance_persistence"):
+            self._instance_persistence = True
 
     @property
     def _memory_scope(self) -> str:
